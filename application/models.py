@@ -1,50 +1,15 @@
-import inspect
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from application import actions, utils
 from django.db import router
 from django.db.models.loading import cache
 from django.utils.datastructures import SortedDict
 from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import serializers, viewsets
-# Create your models here.
 
+from application import actions, utils
+from application.utils import get_field_map, get_field_choices, get_unicode
 
-def get_field_map():
-    field_map = {}
-    for name, obj in inspect.getmembers(models):
-        if inspect.isclass(obj) and name.endswith('Field'):
-            application_field = 'application_%s' %  name.lower()
-            field_map[application_field] = ('django.db.models', name)
-    return field_map
-
-
-DJANGO_FIELD_CHOICES = [
-    ('Basic Fields', [(key, value[1]) for key, value in get_field_map().items()])
-]
-def get_field_choices():
-    del DJANGO_FIELD_CHOICES[:]
-    DJANGO_FIELD_CHOICES.append(
-        ('Basic Fields', [(key, value[1]) for key, value in get_field_map().items()])
-    )
-    curlabel = None
-    curmodels = None
-    try:
-        for c in ContentType.objects.all().order_by('app_label'):
-            if c.app_label != curlabel:
-                if curlabel is not None:
-                    DJANGO_FIELD_CHOICES.append((curlabel.capitalize(), curmodels))
-                curlabel = c.app_label
-                curmodels = []
-            curmodels.append((c.model, c.name.capitalize()))
-        DJANGO_FIELD_CHOICES.append((curlabel.capitalize(), curmodels))
-    except:
-        # ContentTypes aren't available yet, maybe pre-syncdb
-        print "WARNING: ContentType is not availble"
-        pass
-
-    return DJANGO_FIELD_CHOICES
 
 class Application(models.Model):
 
@@ -108,16 +73,7 @@ class ApplicationModel(models.Model):
             verbose_name = self.verbose_name
         attrs['Meta'] = Meta
         attrs['__module__'] = 'applications.%s.models' % self.app.name
-        def uni(self):
-            unival = []
-            for f in self._meta.fields:
-                if len(unival) < 3 and f.__class__ is models.CharField:
-                    unival.append(getattr(self, f.name))
-            if len(unival) > 0:
-                return u' '.join(unival)
-            else:
-                return self.verbose_name
-        attrs['__unicode__'] = uni
+        attrs['__unicode__'] = get_unicode
         for field in self.fields.all():
             attrs[field.name] = field.as_field()
         return type(str(self.name), (models.Model,), attrs)
