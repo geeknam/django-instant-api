@@ -50,44 +50,48 @@ def get_field_choices():
 class Application(models.Model):
 
     class Meta:
-        verbose_name = _('Application')
+        verbose_name = 'Application'
 
     name = models.SlugField(
-        verbose_name=_('Application Name'),
-        help_text=_('Internal name for this application. Lower case, plural'),
+        help_text='Internal name for this application. Lower case, plural',
         max_length=255, unique=True,
         null=False, blank=False
     )
     verbose_name = models.CharField(
-        verbose_name=_('Verbose Name'),
-        help_text=_('Display name for this application'),
+        help_text='Display name for this application',
         max_length=255, null=False, blank=False
     )
 
     def __unicode__(self):
         return self.verbose_name
 
+
 class ApplicationModel(models.Model):
 
     class Meta:
         verbose_name = _('Model')
-        unique_together = (('app', 'name'),)
+        unique_together = (
+            ('app', 'name'),
+        )
 
     name = models.SlugField(
-        verbose_name=_('Model Name'),
-        help_text=_('Internal name for this model'),
+        help_text='Internal name for this model',
         max_length=64, null=False, blank=False
     )
 
     verbose_name = models.CharField(
-        verbose_name=_('Verbose Name'),
-        help_text=_('Display name for this model'),
+        help_text='Display name for this model',
         max_length=128, null=False, blank=False
     )
 
-    app = models.ForeignKey(
-        'application.Application',
-        related_name='models',null=False, blank=False
+    verbose_name_plural = models.CharField(
+        help_text='Display plural name for this model',
+        max_length=128, null=True, blank=True
+    )
+
+    app = models.ForeignKey('application.Application',
+        related_name='models',
+        null=False, blank=False
     )
 
     def uncache(self):
@@ -107,6 +111,7 @@ class ApplicationModel(models.Model):
         class Meta:
             app_label = self.app.name
             verbose_name = self.verbose_name
+            verbose_name_plural = self.verbose_name_plural
         attrs['Meta'] = Meta
         attrs['__module__'] = 'applications.%s.models' % self.app.name
         def uni(self):
@@ -159,64 +164,58 @@ class ApplicationModel(models.Model):
     def __unicode__(self):
         return self.verbose_name
 
+
 class ModelField(models.Model):
 
     class Meta:
-        verbose_name = _('Model Field')
-        unique_together = (('model', 'name'),)
+        unique_together = (
+            ('model', 'name'),
+        )
         ordering = ('id',)
 
     name = models.SlugField(
-        verbose_name=_('Field Name'),
-        help_text=_('Internal name for this field'),
+        help_text='Internal name for this field',
         max_length=64, null=False, blank=False
     )
 
     verbose_name = models.CharField(
-        verbose_name=_('Verbose Name'),
-        help_text=_('Display name for this field'),
+        help_text='Display name for this field',
         max_length=128, null=False, blank=False
     )
 
-    model = models.ForeignKey(
-        'application.ApplicationModel', related_name='fields',
+    model = models.ForeignKey('application.ApplicationModel',
+        related_name='fields',
         null=False, blank=False
     )
 
     field_type = models.CharField(
-        verbose_name=_('Field Type'),
-        help_text=_('Field Data Type'),
+        help_text='Field Data Type',
         choices=get_field_choices(),
         max_length=128, null=False, blank=False
     )
 
     null = models.BooleanField(
-        verbose_name=_('Null'),
-        help_text=_('Can this field contain null values?'),
+        help_text='Can this field contain null values?',
         default=True, null=False, blank=False
     )
 
     blank = models.BooleanField(
-        verbose_name=_('Blank'),
-        help_text=_('Can this field contain empty values?'),
+        help_text='Can this field contain empty values?',
         default=True, null=False, blank=False
     )
 
     unique = models.BooleanField(
-        verbose_name=_('Unique'),
-        help_text=_('Restrict this field to unique values'),
+        help_text='Restrict this field to unique values',
         default=False, null=False, blank=False
     )
 
     default = models.CharField(
-        verbose_name=_('Default value'),
-       help_text=_('Default value given to this field when none is provided'),
+       help_text='Default value given to this field when none is provided',
        max_length=32, null=True, blank=True
     )
 
     help_text = models.CharField(
-        verbose_name=_('Help Text'),
-        help_text=_('Short description of the field\' purpose'),
+        help_text='Short description of the field',
         max_length=256, null=True, blank=True
     )
 

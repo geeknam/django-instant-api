@@ -2,18 +2,18 @@ from application.models import Application, ApplicationModel, ModelField
 from django.contrib import admin
 
 class ApplicationAdmin(admin.ModelAdmin):
-    fields = ('name', 'verbose_name')
     search_fields = ('name','verbose_name')
     ordering = ('name',)
     list_display = ('name', 'verbose_name')
 admin.site.register(Application, ApplicationAdmin)
 
+
 class ModelFieldInline(admin.TabularInline):
     model = ModelField
     extra=10
 
+
 class ApplicationModelAdmin(admin.ModelAdmin):
-    fields = ('name', 'app', 'verbose_name')
     search_fields = ('name','verbose_name')
     ordering = ('app','name')
     list_display = ('name', 'verbose_name', 'app')
@@ -21,6 +21,7 @@ class ApplicationModelAdmin(admin.ModelAdmin):
     inlines = [ModelFieldInline]
 
 admin.site.register(ApplicationModel, ApplicationModelAdmin)
+
 
 class ModelFieldAdmin(admin.ModelAdmin):
     search_fields = ('name','verbose_name', 'field_type')
