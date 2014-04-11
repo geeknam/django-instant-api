@@ -1,4 +1,4 @@
-from application.models import Application, ApplicationModel, AdminSetting, ModelField
+from application.models import Application, ApplicationModel, AdminSetting, ApiSerialiserSetting, ModelField
 from django.contrib import admin
 
 class ApplicationAdmin(admin.ModelAdmin):
@@ -30,7 +30,7 @@ class ModelFieldAdmin(admin.ModelAdmin):
     list_filter = ('model',)
 
 admin.site.register(AdminSetting, admin.ModelAdmin)
-
+admin.site.register(ApiSerialiserSetting, admin.ModelAdmin)
 
 for model in ApplicationModel.objects.all():
     admin.site.register(model.as_model(), model.as_admin())

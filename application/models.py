@@ -64,6 +64,11 @@ class ApplicationModel(models.Model):
         null=True, blank=True
     )
 
+    api_serialiser = models.OneToOneField(
+        'application.ApiSerialiserSetting',
+        null=True, blank=True
+    )
+
     def uncache(self):
         '''
         Removes the model this instance represents from Django's cache
@@ -109,12 +114,26 @@ class ApplicationModel(models.Model):
         serializer_name = '%sSerializer' % self.name.capitalize()
         return type(str(serializer_name), (serializers.HyperlinkedModelSerializer,), attrs)
 
+    def as_api_serialiser(self):
+        attrs = {}
+        if self.api_serialiser:
+            class Meta:
+                model = self.as_model()
+                fields = self.api_serialiser.fields.split(',')
+            attrs['Meta'] = Meta
+            serializer_name = '%sApiSerializer' % self.name.capitalize()
+            return type(str(serializer_name), (serializers.ModelSerializer,), attrs)
+        return
+
     def as_view_set(self):
         attrs = {
             'queryset': self.as_model().objects.all(),
             'serializer_class': self.as_serializer(),
             'paginate': 50
         }
+        api_serialiser = self.as_api_serialiser()
+        if api_serialiser:
+            attrs['serializer_class'] = api_serialiser
         viewset_name = '%sViewSet' % self.name.capitalize()
         return type(str(viewset_name), (viewsets.ModelViewSet,), attrs)
 
@@ -134,7 +153,6 @@ class ApplicationModel(models.Model):
 
 
 class AdminSetting(models.Model):
-
     list_filter = models.CharField(max_length=255)
     list_display = models.CharField(max_length=255)
     search_fields = models.CharField(max_length=255)
@@ -142,9 +160,15 @@ class AdminSetting(models.Model):
     def __unicode__(self):
         return '%s.%s' % (
             self.applicationmodel.app.name,
-            self.applicationmodel.name.capitalize(  )
+            self.applicationmodel.name.capitalize()
         )
 
+
+class ApiSerialiserSetting(models.Model):
+    fields = models.CharField(max_length=255)
+
+    def __unicode__(self):
+        return '%sSerialiser' % self.applicationmodel.name.capitalize()
 
 class ModelField(models.Model):
 
