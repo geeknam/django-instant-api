@@ -1,4 +1,4 @@
-from application.models import Application, ApplicationModel, ModelField
+from application.models import Application, ApplicationModel, AdminSetting, ModelField
 from django.contrib import admin
 
 class ApplicationAdmin(admin.ModelAdmin):
@@ -28,6 +28,9 @@ class ModelFieldAdmin(admin.ModelAdmin):
     ordering = ('name',)
     list_display = ('name', 'verbose_name', 'model')
     list_filter = ('model',)
+
+admin.site.register(AdminSetting, admin.ModelAdmin)
+
 
 for model in ApplicationModel.objects.all():
     admin.site.register(model.as_model(), model.as_admin())

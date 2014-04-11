@@ -59,6 +59,11 @@ class ApplicationModel(models.Model):
         null=False, blank=False
     )
 
+    admin = models.OneToOneField(
+        'application.AdminSetting',
+        null=True, blank=True
+    )
+
     def uncache(self):
         '''
         Removes the model this instance represents from Django's cache
@@ -76,7 +81,7 @@ class ApplicationModel(models.Model):
         class Meta:
             app_label = self.app.name
             verbose_name = self.verbose_name
-            verbose_name_plural = self.verbose_name_plural
+            verbose_name_plural = self.verbose_name_plural or self.verbose_name + 's'
         attrs['Meta'] = Meta
         attrs['__module__'] = 'applications.%s.models' % self.app.name
         attrs['__unicode__'] = get_unicode
@@ -86,6 +91,13 @@ class ApplicationModel(models.Model):
 
     def as_admin(self):
         attrs = {}
+        if self.admin:
+            field_names = [field.name for field in self.admin._meta.fields]
+            field_names.remove('id')
+            for field_name in field_names:
+                attr = getattr(self.admin, field_name)
+                if attr:
+                    attrs[field_name] = attr.split(',')
         admin_name = '%sAdmin' % self.name.capitalize()
         return type(str(admin_name), (ImportExportModelAdmin,), attrs)
 
@@ -119,6 +131,19 @@ class ApplicationModel(models.Model):
 
     def __unicode__(self):
         return self.verbose_name
+
+
+class AdminSetting(models.Model):
+
+    list_filter = models.CharField(max_length=255)
+    list_display = models.CharField(max_length=255)
+    search_fields = models.CharField(max_length=255)
+
+    def __unicode__(self):
+        return '%s.%s' % (
+            self.applicationmodel.app.name,
+            self.applicationmodel.name.capitalize(  )
+        )
 
 
 class ModelField(models.Model):
