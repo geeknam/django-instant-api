@@ -27,7 +27,6 @@ class ModelFieldAdmin(admin.ModelAdmin):
     ordering = ('name',)
     list_display = ('name', 'verbose_name', 'model')
     list_filter = ('model',)
-#admin.site.register(DynamicModelField, DynamicModelFieldAdmin)
 
 for model in ApplicationModel.objects.all():
-    admin.site.register(model.as_model(), admin.ModelAdmin)
+    admin.site.register(model.as_model(), model.as_admin())

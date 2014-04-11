@@ -1,14 +1,15 @@
 import inspect
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from application import actions, utils
 from django.db import router
 from django.db.models.loading import cache
 from django.utils.datastructures import SortedDict
 from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import serializers, viewsets
-# Create your models here.
+from import_export.admin import ImportExportModelAdmin
+
+from application import actions, utils
 
 
 def get_field_map():
@@ -121,6 +122,11 @@ class ApplicationModel(models.Model):
         for field in self.fields.all():
             attrs[field.name] = field.as_field()
         return type(str(self.name), (models.Model,), attrs)
+
+    def as_admin(self):
+        attrs = {}
+        admin_name = '%sAdmin' % self.name.capitalize()
+        return type(str(admin_name), (ImportExportModelAdmin,), attrs)
 
     def as_serializer(self):
         attrs = {}
