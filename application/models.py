@@ -158,11 +158,12 @@ class AdminSetting(models.Model):
     search_fields = models.CharField(max_length=255)
 
     def __unicode__(self):
-        return '%s.%s' % (
-            self.applicationmodel.app.name,
-            self.applicationmodel.name.capitalize()
-        )
-
+        if hasattr(self, 'applicationmodel'):
+            return '%s.%s' % (
+                self.applicationmodel.app.name,
+                self.applicationmodel.name.capitalize()
+            )
+        return 'Settings'
 
 class ApiSerialiserSetting(models.Model):
     fields = models.CharField(max_length=255)
