@@ -68,6 +68,11 @@ class ApplicationModel(models.Model):
         null=True, blank=True
     )
 
+    ordering = models.CharField(
+        max_length=255,
+        null=True, blank=True
+    )
+
     def uncache(self):
         '''
         Removes the model this instance represents from Django's cache
@@ -86,6 +91,7 @@ class ApplicationModel(models.Model):
             app_label = self.app.name
             verbose_name = self.verbose_name
             verbose_name_plural = self.verbose_name_plural or self.verbose_name + 's'
+            ordering = self.ordering.split(',') or '-pk'
         attrs['Meta'] = Meta
         attrs['__module__'] = 'applications.%s.models' % self.app.name
         attrs['__unicode__'] = get_unicode
