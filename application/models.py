@@ -10,6 +10,10 @@ from import_export.admin import ImportExportModelAdmin
 from application import actions, utils
 from application.utils import get_field_map, get_field_choices, get_unicode
 
+import logging
+
+log = logging.getLogger(__name__)
+
 
 class Application(models.Model):
 
@@ -271,7 +275,9 @@ class ModelField(models.Model):
                 ctype = ContentType.objects.get(model=self.field_type)
                 field_class = models.ForeignKey
                 try:
-                    model_def = ApplicationModel.objects.get(name__iexact=ctype.model, app__name__iexact=ctype.app_label)
+                    model_def = ApplicationModel.objects.get(
+                        name__iexact=ctype.model, app__name__iexact=ctype.app_label
+                    )
                     model_klass = model_def.as_model()
                 except ApplicationModel.DoesNotExist:
                     model_klass = ctype.model_class()
@@ -280,11 +286,11 @@ class ModelField(models.Model):
                     del attrs['to']
                     raise Exception('Could not get model class from %s' % ctype.model)
             except Exception, e:
-                print "Failed to set foreign key: %s" % e
+                log.info("Failed to set foreign key: %s", e)
                 field_class = None
 
         if field_class is None:
-            print "No field class found for %s, using CharField as default" % self.field_type
+            log.info("No field class found for %s, using CharField as default", self.field_type)
             field_class = models.CharField
 
         if field_class is models.CharField:
