@@ -95,7 +95,7 @@ class ApplicationModel(models.Model):
             app_label = self.app.name
             verbose_name = self.verbose_name
             verbose_name_plural = self.verbose_name_plural or self.verbose_name + 's'
-            ordering = self.ordering.split(',') or '-pk'
+            ordering = self.ordering.split(',') if self.ordering else '-pk'
         attrs['Meta'] = Meta
         attrs['__module__'] = 'applications.%s.models' % self.app.name
         attrs['__unicode__'] = get_unicode
