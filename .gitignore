@@ -1,2 +1,5 @@
 *.pyc
 .DS_Store
+/admin/*
+/grappelli/*
+/rest_framework/*

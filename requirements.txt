@@ -2,3 +2,5 @@ Django==1.6
 djangorestframework==2.3.13
 django-import-export==0.2.1
 South==0.8.4
+django-filter
+django-grappelli=2.5.4

@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
 from django.db import router
 from django.db.models.loading import cache
 from django.utils.datastructures import SortedDict
@@ -34,7 +33,7 @@ class Application(models.Model):
 class ApplicationModel(models.Model):
 
     class Meta:
-        verbose_name = _('Model')
+        verbose_name = 'Model'
         unique_together = (
             ('app', 'name'),
         )
@@ -129,8 +128,12 @@ class ApplicationModel(models.Model):
         attrs = {
             'queryset': self.as_model().objects.all(),
             'serializer_class': self.as_serializer(),
-            'paginate': 50
+            'paginate': 50,
         }
+        if self.api_serialiser:
+            attrs.update({
+                'filter_fields': self.api_serialiser.filter_fields.split(',')
+            })
         api_serialiser = self.as_api_serialiser()
         if api_serialiser:
             attrs['serializer_class'] = api_serialiser
@@ -153,23 +156,32 @@ class ApplicationModel(models.Model):
 
 
 class AdminSetting(models.Model):
-    list_filter = models.CharField(max_length=255)
-    list_display = models.CharField(max_length=255)
-    search_fields = models.CharField(max_length=255)
+    list_filter = models.CharField(max_length=255, null=True, blank=True)
+    list_display = models.CharField(max_length=255, null=True, blank=True)
+    search_fields = models.CharField(max_length=255, null=True, blank=True)
 
     def __unicode__(self):
         if hasattr(self, 'applicationmodel'):
-            return '%s.%s' % (
+            return u'%s.%sAdmin' % (
                 self.applicationmodel.app.name,
                 self.applicationmodel.name.capitalize()
             )
-        return 'Settings'
+        return u'Settings'
 
 class ApiSerialiserSetting(models.Model):
     fields = models.CharField(max_length=255)
+    filter_fields = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = 'API settings'
 
     def __unicode__(self):
-        return '%sSerialiser' % self.applicationmodel.name.capitalize()
+        if hasattr(self, 'applicationmodel'):
+            return u'%s.%sSerialiser' % (
+                self.applicationmodel.app.name,
+                self.applicationmodel.name.capitalize()
+            )
+        return u'API Serialiser'
 
 class ModelField(models.Model):
 
@@ -252,8 +264,11 @@ class ModelField(models.Model):
             try:
                 ctype = ContentType.objects.get(model=self.field_type)
                 field_class = models.ForeignKey
-                model_def = ApplicationModel.objects.get(name__iexact=ctype.model, app__name__iexact=ctype.app_label)
-                model_klass = model_def.as_model()
+                try:
+                    model_def = ApplicationModel.objects.get(name__iexact=ctype.model, app__name__iexact=ctype.app_label)
+                    model_klass = model_def.as_model()
+                except ApplicationModel.DoesNotExist:
+                    model_klass = ctype.model_class()
                 attrs['to'] = model_klass
                 if attrs['to'] is None:
                     del attrs['to']

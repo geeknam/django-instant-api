@@ -1,4 +1,4 @@
-from django.core.management.sql import custom_sql_for_model, emit_post_sync_signal
+from django.core.management.sql import emit_post_sync_signal
 from django.core.management.color import no_style
 from django.db import connections, router, transaction, models, DEFAULT_DB_ALIAS
 from django.utils.datastructures import SortedDict
@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 
 def create(model, using):
     ''' Mostly lifted from django.core.management.commands.syncdb'''
-    
+
     opts = model._meta
 
     # Get database connection and cursor
@@ -20,11 +20,11 @@ def create(model, using):
     seen_models = connection.introspection.installed_models(tables)
     created_models = set()
     pending_references = {}
-    
+
     # Abort if the table we're going to create already exists
     if opts.db_table in tables:
         return
-        
+
     # Build the manifest of apps and models that are to be synchronized
     all_models = [
         (app.__name__.split('.')[-2],
@@ -67,7 +67,7 @@ def create(model, using):
 
     # Commit changes to the database
     transaction.commit_unless_managed(using=db)
-    
+
     # Send the post_syncdb signal, so individual apps can do whatever they need
     # to do at this point.
     emit_post_sync_signal(created_models, 0, False, db)

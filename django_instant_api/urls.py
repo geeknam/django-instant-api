@@ -16,7 +16,7 @@ urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'django_instant_api.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
-
+    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
 )
