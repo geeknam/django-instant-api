@@ -3,6 +3,7 @@ from django.db import router
 from django.db.models.loading import cache
 from django.utils.datastructures import SortedDict
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 
 from rest_framework import serializers, viewsets
 from import_export.admin import ImportExportModelAdmin
@@ -188,11 +189,17 @@ class ApiSerialiserSetting(models.Model):
 
     def clean(self):
         if hasattr(self, 'applicationmodel'):
-            allowed_fields = self.applicationmodel.fields.values_list('name', flat=True)
-
-            for field in self.fields.split(','):
+            allowed_fields = self.applicationmodel.fields.values_list(
+                'name', flat=True
+            )
+            fields = ','.join([
+                self.filter_fields, self.fields
+            ]).split(',')
+            for field in fields:
                 if field not in allowed_fields:
-                    raise Exception('Field %s does not exist' % field)
+                    raise ValidationError(
+                        'Field "%s" does not exist' % field
+                    )
 
     def __unicode__(self):
         if hasattr(self, 'applicationmodel'):
