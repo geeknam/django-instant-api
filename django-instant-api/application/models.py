@@ -95,7 +95,7 @@ class ApplicationModel(models.Model):
             app_label = self.app.name
             verbose_name = self.verbose_name
             verbose_name_plural = self.verbose_name_plural or self.verbose_name + 's'
-            ordering = self.ordering.split(',') if self.ordering else '-pk'
+            ordering = self.ordering.split(',') if self.ordering else ('-pk',)
         attrs['Meta'] = Meta
         attrs['__module__'] = 'applications.%s.models' % self.app.name
         attrs['__unicode__'] = get_unicode
@@ -178,12 +178,21 @@ class AdminSetting(models.Model):
             )
         return u'Settings'
 
+
 class ApiSerialiserSetting(models.Model):
     fields = models.CharField(max_length=255)
     filter_fields = models.CharField(max_length=255)
 
     class Meta:
         verbose_name = 'API settings'
+
+    def clean(self):
+        if hasattr(self, 'applicationmodel'):
+            allowed_fields = self.applicationmodel.fields.values_list('name', flat=True)
+
+            for field in self.fields.split(','):
+                if field not in allowed_fields:
+                    raise Exception('Field %s does not exist' % field)
 
     def __unicode__(self):
         if hasattr(self, 'applicationmodel'):
@@ -247,6 +256,17 @@ class ModelField(models.Model):
         max_length=256, null=True, blank=True
     )
 
+    def get_related_to_model(self):
+        ctype = ContentType.objects.get(model=self.field_type)
+        try:
+            model_def = ApplicationModel.objects.get(
+                name__iexact=ctype.model, app__name__iexact=ctype.app_label
+            )
+            model_class = model_def.as_model()
+        except ApplicationModel.DoesNotExist:
+            model_class = ctype.model_class()
+        return model_class
+
     def as_field(self):
         attrs = {
             'verbose_name': self.verbose_name,
@@ -272,19 +292,11 @@ class ModelField(models.Model):
 
         if field_class is None:
             try:
-                ctype = ContentType.objects.get(model=self.field_type)
                 field_class = models.ForeignKey
-                try:
-                    model_def = ApplicationModel.objects.get(
-                        name__iexact=ctype.model, app__name__iexact=ctype.app_label
-                    )
-                    model_klass = model_def.as_model()
-                except ApplicationModel.DoesNotExist:
-                    model_klass = ctype.model_class()
-                attrs['to'] = model_klass
+                attrs['to'] = self.get_related_to_model()
                 if attrs['to'] is None:
                     del attrs['to']
-                    raise Exception('Could not get model class from %s' % ctype.model)
+                    raise Exception('Could not get model class from %s' % self.field_type)
             except Exception, e:
                 log.info("Failed to set foreign key: %s", e)
                 field_class = None

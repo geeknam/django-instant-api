@@ -1,5 +1,6 @@
 *.pyc
 .DS_Store
-/admin/*
-/grappelli/*
-/rest_framework/*
+*.sqlite3
+/django-instant-api/admin/*
+/django-instant-api/grappelli/*
+/django-instant-api/rest_framework/*

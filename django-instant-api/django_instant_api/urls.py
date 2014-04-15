@@ -9,7 +9,11 @@ admin.autodiscover()
 
 router = routers.DefaultRouter()
 for model in ApplicationModel.objects.all():
-    router.register(model.verbose_name_plural.lower(), model.as_view_set())
+    if model.verbose_name_plural:
+        endpoint_name = model.verbose_name_plural.lower()
+    else:
+        endpoint_name = model.verbose_name.lower() + 's'
+    router.register(endpoint_name, model.as_view_set())
 
 
 urlpatterns = patterns('',
