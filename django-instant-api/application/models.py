@@ -167,9 +167,15 @@ class ApplicationModel(models.Model):
 
 
 class AdminSetting(models.Model):
-    list_filter = models.CharField(max_length=255, null=True, blank=True)
-    list_display = models.CharField(max_length=255, null=True, blank=True)
-    search_fields = models.CharField(max_length=255, null=True, blank=True)
+    list_filter = models.CharField(max_length=255,
+        null=True, blank=True
+    )
+    list_display = models.CharField(max_length=255,
+        null=True, blank=True
+    )
+    search_fields = models.CharField(max_length=255,
+        null=True, blank=True
+    )
 
     def __unicode__(self):
         if hasattr(self, 'applicationmodel'):
@@ -181,8 +187,12 @@ class AdminSetting(models.Model):
 
 
 class ApiSerialiserSetting(models.Model):
-    fields = models.CharField(max_length=255)
-    filter_fields = models.CharField(max_length=255)
+    fields = models.CharField(max_length=255,
+        null=True, blank=True
+    )
+    filter_fields = models.CharField(max_length=255,
+        null=True, blank=True
+    )
 
     class Meta:
         verbose_name = 'API settings'
