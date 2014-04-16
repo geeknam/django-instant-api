@@ -7,6 +7,7 @@ env:
 install:
   - pip install -r requirements.txt
   - pip install coveralls
-script: coverage run --source=django-instant-api manage.py test application
+script:
+  python manage.py test application
 after_success:
   coveralls
