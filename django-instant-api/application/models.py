@@ -5,10 +5,7 @@ from django.utils.datastructures import SortedDict
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
-from rest_framework import serializers, viewsets
-from import_export.admin import ImportExportModelAdmin
-
-from application import actions, utils
+from application import actions, utils, mixins
 from application.utils import get_field_map, get_field_choices, get_unicode
 
 import logging
@@ -35,7 +32,7 @@ class Application(models.Model):
         return self.verbose_name
 
 
-class ApplicationModel(models.Model):
+class ApplicationModel(mixins.AdminMixin, mixins.ApiMixin, models.Model):
 
     class Meta:
         verbose_name = 'Model'
@@ -104,53 +101,6 @@ class ApplicationModel(models.Model):
             attrs[field.name] = field.as_field()
         return type(str(self.name), (models.Model,), attrs)
 
-    def as_admin(self):
-        attrs = {}
-        if self.admin:
-            field_names = [field.name for field in self.admin._meta.fields]
-            field_names.remove('id')
-            for field_name in field_names:
-                attr = getattr(self.admin, field_name)
-                if attr:
-                    attrs[field_name] = attr.split(',')
-        admin_name = '%sAdmin' % self.name.capitalize()
-        return type(str(admin_name), (ImportExportModelAdmin,), attrs)
-
-    def as_serializer(self):
-        attrs = {}
-        class Meta:
-            model = self.as_model()
-        attrs['Meta'] = Meta
-        serializer_name = '%sSerializer' % self.name.capitalize()
-        return type(str(serializer_name), (serializers.HyperlinkedModelSerializer,), attrs)
-
-    def as_api_serialiser(self):
-        attrs = {}
-        if self.api_serialiser:
-            class Meta:
-                model = self.as_model()
-                fields = self.api_serialiser.fields.split(',')
-            attrs['Meta'] = Meta
-            serializer_name = '%sApiSerializer' % self.name.capitalize()
-            return type(str(serializer_name), (serializers.ModelSerializer,), attrs)
-        return
-
-    def as_view_set(self):
-        attrs = {
-            'queryset': self.as_model().objects.all(),
-            'serializer_class': self.as_serializer(),
-            'paginate': 50,
-        }
-        if self.api_serialiser:
-            attrs.update({
-                'filter_fields': self.api_serialiser.filter_fields.split(',')
-            })
-        api_serialiser = self.as_api_serialiser()
-        if api_serialiser:
-            attrs['serializer_class'] = api_serialiser
-        viewset_name = '%sViewSet' % self.name.capitalize()
-        return type(str(viewset_name), (viewsets.ModelViewSet,), attrs)
-
     def save(self, force_insert=False, force_update=False, using=None):
         using = using or router.db_for_write(self.__class__, instance=self)
         create = False
@@ -193,6 +143,7 @@ class ApiSerialiserSetting(models.Model):
     filter_fields = models.CharField(max_length=255,
         null=True, blank=True
     )
+    nested = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'API settings'
