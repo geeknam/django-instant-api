@@ -11,9 +11,9 @@ Create REST API instantly with Django in less than 5min.
 Features
 ------------
 * Dynamically create models
-* Automatically generate API endpoints
+* Automagically generate API endpoints
 * Customisable admin settings
-* Easily import/export data
+* Easily import/export data for testing
 
 
 Dependencies

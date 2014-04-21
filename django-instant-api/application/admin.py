@@ -8,10 +8,9 @@ class ApplicationAdmin(admin.ModelAdmin):
 admin.site.register(Application, ApplicationAdmin)
 
 
-class ModelFieldInline(admin.TabularInline):
+class ModelFieldInline(admin.StackedInline):
     model = ModelField
-    extra=10
-
+    extra = 0
 
 class ApplicationModelAdmin(admin.ModelAdmin):
     search_fields = ('name','verbose_name')

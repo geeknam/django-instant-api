@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 
 from application import actions, utils, mixins
 from application.utils import get_field_map, get_field_choices, get_unicode
-
 import logging
 
 log = logging.getLogger(__name__)
@@ -150,9 +149,10 @@ class ApiSerialiserSetting(models.Model):
 
     def clean(self):
         if hasattr(self, 'applicationmodel'):
-            allowed_fields = self.applicationmodel.fields.values_list(
+            allowed_fields = list(self.applicationmodel.fields.values_list(
                 'name', flat=True
-            )
+            ))
+            allowed_fields.append('id')
             fields = ','.join([
                 self.filter_fields, self.fields
             ]).split(',')
@@ -305,7 +305,9 @@ class ModelField(models.Model):
         self.model.uncache()
 
     def __unicode__(self):
-        return self.verbose_name
+        return '%s.%s' % (
+            self.model.name, self.name
+        )
 
 def _update_dynamic_field_choices():
     ModelField._meta.get_field_by_name('field_type')[0]._choices = get_field_choices()
