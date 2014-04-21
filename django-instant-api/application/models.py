@@ -5,6 +5,8 @@ from django.utils.datastructures import SortedDict
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
+from south.db import db
+
 from application import actions, utils, mixins
 from application.utils import get_field_map, get_field_choices, get_unicode
 import logging
@@ -40,7 +42,7 @@ class ApplicationModel(mixins.AdminMixin, mixins.ApiMixin, models.Model):
         )
 
     name = models.SlugField(
-        help_text='Internal name for this model',
+        help_text='Internal name for this model in lowercase',
         max_length=64, null=False, blank=False
     )
 
@@ -108,7 +110,6 @@ class ApplicationModel(mixins.AdminMixin, mixins.ApiMixin, models.Model):
         super(ApplicationModel, self).save(force_insert, force_update, using)
         if create:
             actions.create(self.as_model(), using)
-        _update_dynamic_field_choices()
         self.uncache()
 
     def __unicode__(self):
@@ -279,7 +280,6 @@ class ModelField(models.Model):
         return field_class(**attrs)
 
     def delete(self, using=None):
-        from south.db import db
         model_class = self.model.as_model()
         table = model_class._meta.db_table
         db.delete_column(table, self.name)
@@ -288,7 +288,6 @@ class ModelField(models.Model):
         self.model.uncache()
 
     def save(self, force_insert=False, force_update=False, using=None):
-        from south.db import db
         create = False
         if self.pk is None or not self.__class__.objects.filter(pk=self.pk).exists():
             create = True
@@ -299,7 +298,7 @@ class ModelField(models.Model):
         if create:
             db.add_column(table, self.name, field, keep_default=False)
         else:
-            pass#db.alter_column(table, self.name, field)
+            pass
 
         super(ModelField, self).save(force_insert, force_update, using)
         self.model.uncache()
@@ -308,6 +307,3 @@ class ModelField(models.Model):
         return '%s.%s' % (
             self.model.name, self.name
         )
-
-def _update_dynamic_field_choices():
-    ModelField._meta.get_field_by_name('field_type')[0]._choices = get_field_choices()
