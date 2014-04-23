@@ -1,6 +1,7 @@
 django-instant-api
 ======================
 [![Build Status](https://secure.travis-ci.org/geeknam/django-instant-api.png?branch=master)](http://travis-ci.org/geeknam/django-instant-api)
+[![Code Health](https://landscape.io/github/geeknam/django-instant-api/master/landscape.png)](https://landscape.io/github/geeknam/django-instant-api/master)
 
 Purpose
 ----------
